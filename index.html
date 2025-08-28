@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FastAPI Users</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px;
+        }
+        table {
+            width: 80%;
+            margin-top: 20px;
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        #userForm {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            background: #fafafa;
+            border-radius: 5px;
+        }
+        input {
+            margin: 5px;
+            padding: 8px;
+        }
+        button {
+            padding: 8px 12px;
+            margin: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h2>Users List</h2>
+
+    <button onclick="toggleForm()">Add User</button>
+
+    <!-- Add User Form -->
+    <div id="userForm">
+        <h3>Add New User</h3>
+        <input type="text" id="name" placeholder="Enter name" required>
+        <input type="email" id="email" placeholder="Enter email" required>
+        <button onclick="addUser()">Submit</button>
+    </div>
+    
+    <table id="usersTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+
+    <script>
+        const API_URL = "http://127.0.0.1:8000";
+
+        function toggleForm() {
+            const form = document.getElementById("userForm");
+            form.style.display = (form.style.display === "none" || form.style.display === "") ? "block" : "none";
+        }
+
+        // Fetch and display users
+        async function fetchUsers() {
+            const res = await fetch(`${API_URL}/users/`);
+            const users = await res.json();
+
+            const tbody = document.querySelector("#usersTable tbody");
+            tbody.innerHTML = "";
+            users.forEach(user => {
+                const row = document.createElement("tr");
+                row.innerHTML = `<td>${user.id}</td><td>${user.name}</td><td>${user.email}</td>`;
+                tbody.appendChild(row);
+            });
+        }
+
+        async function addUser() {
+    const name = document.getElementById("name").value;
+    const email = document.getElementById("email").value;
+
+    if (!name || !email) {
+        alert("Please fill all fields");
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_URL}/users/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, email })
+        });
+
+        const data = await res.json(); // parse JSON even if res.ok is false
+
+        if (res.ok) {
+            alert("User added successfully!");
+            document.getElementById("name").value = "";
+            document.getElementById("email").value = "";
+            toggleForm();
+            fetchUsers();
+        } else {
+            // Show actual error from backend
+            alert("Failed to add user: " + (data.detail || JSON.stringify(data)));
+        }
+    } catch (err) {
+        alert("Error adding user: " + err.message);
+    }
+}
+
+        // Initial load
+        fetchUsers();
+    </script>
+</body>
+</html>
